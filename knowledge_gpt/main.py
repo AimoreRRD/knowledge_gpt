@@ -2,15 +2,9 @@ import streamlit as st
 from openai.error import OpenAIError
 
 from knowledge_gpt.components.sidebar import sidebar
-from knowledge_gpt.utils.QA import (
-    embed_docs,
-    get_answer,
-    get_sources,
-    parse_file,
-    text_to_docs,
-)
-
-from knowledge_gpt.utils.UI import wrap_text_in_html, is_valid
+from knowledge_gpt.utils.expert import embed_docs, get_answer, get_sources
+from knowledge_gpt.utils.parsers import parse_file, text_to_docs
+from knowledge_gpt.utils.UI import is_valid, wrap_text_in_html
 
 
 def clear_submit():
@@ -43,9 +37,9 @@ if uploaded_file is not None:
 
 query = st.text_area("Ask a question about the document", on_change=clear_submit)
 
-with st.expander("Advanced Options"):
-    show_all_chunks = st.checkbox("Show all chunks retrieved from vector search")
-    show_full_doc = st.checkbox("Show parsed contents of the document")
+st.markdown("Advanced Options:")
+show_all_chunks = st.checkbox("Show all chunks retrieved from vector search")
+show_full_doc = st.checkbox("Show parsed contents of the document")
 
 if show_full_doc and texts:
     with st.expander("Document"):
