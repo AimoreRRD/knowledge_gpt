@@ -156,4 +156,5 @@ cython_debug/
 #.idea/
 
 
-*.txt
+data/*
+data/paul_graham_essay.txt
