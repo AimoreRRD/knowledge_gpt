@@ -8,6 +8,7 @@ from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from pypdf import PdfReader
 
+
 @st.cache_data()
 def parse_docx(file: BytesIO) -> str:
     text = docx2txt.process(file)
@@ -66,9 +67,7 @@ def text_to_docs(text: str | List[str]) -> List[Document]:
         )
         chunks = text_splitter.split_text(doc.page_content)
         for i, chunk in enumerate(chunks):
-            doc = Document(
-                page_content=chunk, metadata={"page": doc.metadata["page"], "chunk": i}
-            )
+            doc = Document(page_content=chunk, metadata={"page": doc.metadata["page"], "chunk": i})
             # Add sources a metadata
             doc.metadata["source"] = f"{doc.metadata['page']}-{doc.metadata['chunk']}"
             doc_chunks.append(doc)
@@ -86,4 +85,3 @@ def parse_file(file: BytesIO) -> str | List[str]:
         return parse_txt(file)
     else:
         raise ValueError("File type not supported!")
-
