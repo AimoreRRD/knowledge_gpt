@@ -9,7 +9,7 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import VectorStore
 from langchain.vectorstores.faiss import FAISS
 from openai.error import AuthenticationError
-
+from langchain.embeddings import HuggingFaceInstructEmbeddings
 from knowledge_gpt.prompts import STUFF_PROMPT
 
 
@@ -19,32 +19,53 @@ def hash_func(doc: Document) -> str:
 
 
 @st.cache_data(show_spinner=False, hash_funcs={Document: hash_func})
-def embed_docs(docs: List[Document]) -> VectorStore:
+def embed_docs(docs: List[Document], api_flag=False) -> VectorStore:
     """Embeds a list of Documents and returns a FAISS index"""
 
-    if not st.session_state.get("OPENAI_API_KEY"):
-        raise AuthenticationError(
-            "Enter your OpenAI API key in the sidebar. You can get a key at"
-            " https://platform.openai.com/account/api-keys."
-        )
-    else:
-        # Embed the chunks
+    # if not st.session_state.get("OPENAI_API_KEY"):
+        # raise AuthenticationError(
+        #     "Enter your OpenAI API key in the sidebar. You can get a key at"
+        #     " https://platform.openai.com/account/api-keys."
+        # )
+    # else:
+    #? Embed the chunks
+    if api_flag == True:
         embeddings = OpenAIEmbeddings(
             openai_api_key=st.session_state.get("OPENAI_API_KEY"),
         )  # type: ignore
+    else:
+        embeddings = HuggingFaceInstructEmbeddings(
+            # model_name="hkunlp/instructor-large",
+            model_name="intfloat/e5-large-v2",
+            embed_instruction="Represent the text for retrieval:",
+            query_instruction="Represent the context for retrieving supporting documents:",
+        )
 
-        index = FAISS.from_documents(docs, embeddings)
+    index = FAISS.from_documents(docs, embeddings)
 
-        return index
+    return index
 
 
 @st.cache_data(show_spinner=False, hash_funcs={Document: hash_func})
-def get_answer(docs: List[Document], query: str) -> Dict[str, Any]:
+def get_answer(docs: List[Document], query: str, api_key = False) -> Dict[str, Any]:
     """Gets an answer to a question from a list of Documents."""
+    if api_key:
+        model = ChatOpenAI(temperature=0, openai_api_key=st.session_state.get("OPENAI_API_KEY")),  # type: ignore
+    else:
+        from langchain.llms import HuggingFacePipeline
+        from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+
+        model_id = "gpt2"
+        tokenizer = AutoTokenizer.from_pretrained(model_id)
+        model = AutoModelForCausalLM.from_pretrained(model_id)
+        pipe = pipeline(
+            "text-generation", model=model, tokenizer=tokenizer, max_new_tokens=10
+        )
+        model = HuggingFacePipeline(pipeline=pipe)
 
     # Get the answer
     chain = load_qa_with_sources_chain(
-        ChatOpenAI(temperature=0, openai_api_key=st.session_state.get("OPENAI_API_KEY")),  # type: ignore
+        model,
         chain_type="stuff",
         prompt=STUFF_PROMPT,
     )
