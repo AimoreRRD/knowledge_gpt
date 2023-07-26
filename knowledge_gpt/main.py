@@ -39,9 +39,9 @@ uploaded_files = st.file_uploader(
 
 @st.cache_resource
 def index_doc(uploaded_files):
-    print("index_doc")
     dfs = pd.DataFrame([])
     for uploaded_file in uploaded_files:
+        print(f"{uploaded_file.getbuffer()=}")
         df = pd.DataFrame({"document": [uploaded_file.name], "include": [False]})
         dfs = pd.concat([dfs, df])
 
@@ -51,25 +51,15 @@ def index_doc(uploaded_files):
         indexes[uploaded_file.name] = embed_docs(doc_chunks, embeddings)
     return dfs, indexes
 
-import base64
-@st.cache_data
-def show_pdf(file_path):
-    with open(file_path, "rb") as f:
-        base64_pdf = base64.b64encode(f.read()).decode('utf-8')
-    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="800" height="800" type="application/pdf"></iframe>'
-    st.markdown(pdf_display, unsafe_allow_html=True)
-
-show_pdf()
 
 def set_df(dfs):
     edited_df = st.data_editor(dfs, hide_index=True)
     return edited_df
 
-print(f"{uploaded_files=}")
-
-if uploaded_files is not None:
+if uploaded_files:
     dfs, indexes = index_doc(uploaded_files)
     edited_df = set_df(dfs)
+
 
 def get_selected_sources_with_scores(query, documents_selected, k) -> List:
     sources_scores_list = []
