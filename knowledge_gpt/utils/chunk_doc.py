@@ -4,8 +4,9 @@ from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 
-# @st.cache_data()
+@st.cache_data(show_spinner="text_to_docs...⏳")
 def text_to_docs(text: str | List[str], document_name=None) -> List[Document]:
+    chunk_size = 500
     """Converts a string or list of strings to a list of Documents with metadata."""
     if isinstance(text, str):
         # Take a single string as one page
@@ -20,14 +21,14 @@ def text_to_docs(text: str | List[str], document_name=None) -> List[Document]:
     doc_chunks = []
     for doc in page_docs:
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=800,
+            chunk_size=chunk_size,
             separators=["\n\n", "\n", ".", "!", "?", ",", " ", ""],
             chunk_overlap=0,
         )
         chunks = text_splitter.split_text(doc.page_content)
         
-        for i, chunk in enumerate(chunks):            
-            doc = Document(page_content=chunk, metadata={"document_name": document_name, "page": doc.metadata["page"], "chunk": i})
+        for i, chunk in enumerate(chunks):
+            doc = Document(page_content=chunk, metadata={"document_name": document_name, "page": doc.metadata["page"], "chunk": i, "total_pages": len(text), "total_chunks": len(chunks)})
             # Add sources a metadata
             doc.metadata["source"] = f"{doc.metadata['document_name']}-{doc.metadata['page']}-{doc.metadata['chunk']}"
             doc_chunks.append(doc)
