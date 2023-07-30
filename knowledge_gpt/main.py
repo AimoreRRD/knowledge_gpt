@@ -1,54 +1,44 @@
-import streamlit as st
-import copy
-import pandas as pd
-from openai.error import OpenAIError
-
-from knowledge_gpt.components.sidebar import sidebar
-from knowledge_gpt.utils.expert import embed_docs, get_answer, load_embeddings, load_model
-from knowledge_gpt.utils.parsers import parse_file
-from knowledge_gpt.utils.chunk_doc import text_to_docs
-from knowledge_gpt.utils.UI import is_valid
-
 from typing import List
 
-api_flag = False
+import pandas as pd
+import streamlit as st
 
+from knowledge_gpt.components.sidebar import sidebar
+from knowledge_gpt.utils.chunk_doc import text_to_docs
+from knowledge_gpt.utils.embedder import embed_docs, load_embedder
+from knowledge_gpt.utils.llm import get_answer, load_llm
+from knowledge_gpt.utils.parsers import parse_file
+from knowledge_gpt.utils.UI import is_valid
 
-documents_selected = []
+st.set_page_config(page_title="KnowledgeGPT", page_icon="📖", layout="wide")
+st.header("📖KnowledgeGPT")
+sidebar()
+
+col1, col2, col3 = st.columns([0.3, 0.3, 1.0])
+with col1:
+    llm_name = st.selectbox(label="LLM", options=["OpenAI", "distilgpt2"])
+with col2:
+    embedder_name = st.selectbox(label="Embedder", options=["OpenAI", "hkunlp/instructor-base"], index=1)
+
 
 def clear_submit():
     st.session_state["submit"] = False
 
 
-st.set_page_config(page_title="KnowledgeGPT", page_icon="📖", layout="wide")
-st.header("📖KnowledgeGPT")
-
-indexes = dict()
-
-embeddings = load_embeddings()
-
-edited_df = pd.DataFrame([], columns=['document'])
-
-uploaded_files = st.file_uploader(
-    "Upload a pdf, docx, or txt file",
-    type=["pdf", "docx", "txt"],
-    help="Scanned documents are not supported yet!",
-    on_change=clear_submit,
-    accept_multiple_files=True
-)
-
 @st.cache_resource
 def index_doc(uploaded_files):
+    embedder = load_embedder(embedder_name)
+
     dfs = pd.DataFrame([])
     for uploaded_file in uploaded_files:
-        print(f"{uploaded_file.getbuffer()=}")
         df = pd.DataFrame({"document": [uploaded_file.name], "include": [False]})
-        dfs = pd.concat([dfs, df])
+        dfs = pd.concat([df, dfs])
 
         text = parse_file(uploaded_file)
-        document_name = uploaded_file.name.split('.')[0]
+        document_name = uploaded_file.name.split(".")[0]
         doc_chunks = text_to_docs(text, document_name=document_name)
-        indexes[uploaded_file.name] = embed_docs(doc_chunks, embeddings)
+        indexes[uploaded_file.name] = embed_docs(doc_chunks, embedder)
+
     return dfs, indexes
 
 
@@ -56,48 +46,85 @@ def set_df(dfs):
     edited_df = st.data_editor(dfs, hide_index=True)
     return edited_df
 
-if uploaded_files:
-    dfs, indexes = index_doc(uploaded_files)
-    edited_df = set_df(dfs)
 
-
-def get_selected_sources_with_scores(query, documents_selected, k) -> List:
+def get_selected_sources_with_scores(query="", documents_selected=[], k: int = 1) -> List:
     sources_scores_list = []
-    for doc in documents_selected: 
-        index = indexes.get(doc)
-        sources_scores = index.similarity_search_with_score(query, k=k)        
+    for doc in documents_selected:
+        index = indexes.get(doc, dict())
+        sources_scores = index.similarity_search_with_score(query, k=k)
+        sources_scores = [(sources_score[0], 1 - sources_score[1]) for sources_score in sources_scores]
         sources_scores_list.extend(sources_scores)
 
     sources_scores_sorted = sorted(sources_scores_list, key=lambda x: x[1], reverse=True)
-    
-    return sources_scores_sorted[:k]
+
+    return sources_scores_sorted
+
+
+indexes = dict()
+edited_df = pd.DataFrame([], columns=["document"])
+
+uploaded_files = st.file_uploader(
+    "Upload a pdf, docx, or txt file",
+    type=["pdf", "docx", "txt"],
+    help="Scanned documents are not supported yet!",
+    on_change=clear_submit,
+    accept_multiple_files=True,
+)
+
+dfs, indexes = index_doc(uploaded_files)
+edited_df = set_df(dfs)
 
 st.markdown("#### Query")
 query = st.text_area("Ask a question about the document.", on_change=clear_submit)
-button = st.button("Submit")
+
+col1, col2, col3, col4 = st.columns([0.1, 0.12, 0.15, 1.0])
+
+with col1:
+    submit_button = st.button("Submit")
+with col2:
+    limit_sources_to_answer = st.number_input(
+        label="Answer sources",
+        min_value=1,
+        max_value=10,
+        value=3,
+        step=1,
+        help="Number of sources (passages) that the Language model will have available to answer the question.",
+    )
+with col3:
+    limit_sources_to_search = st.number_input(
+        label="Document sources",
+        min_value=1,
+        max_value=10,
+        value=3,
+        step=1,
+        help="Number of sources (passages) that the Embedder will retrieve per document.",
+    )
+
 st.markdown("#### Answer")
-
-#? Continue only if there are documents selected and there is a question.
-if (button or st.session_state.get("submit")) and len(edited_df):
-
-    documents_selected = list(edited_df[edited_df['include'] == True]['document'])
+if (submit_button or st.session_state.get("submit")) and len(edited_df):
+    documents_selected = list(edited_df[edited_df["include"]]["document"])
 
     if is_valid(indexes, query, documents_selected):
-        model = load_model()
+        model = load_llm(llm_name)
 
-        selected_sources_scores_sorted = get_selected_sources_with_scores(query, documents_selected, k=3)
-        selected_sources_sorted = [x[0] for x in selected_sources_scores_sorted]
-        answer = get_answer(selected_sources_sorted, query, model)        
+        selected_sources_scores_sorted = get_selected_sources_with_scores(
+            query, documents_selected, k=limit_sources_to_search
+        )
+        selected_sources_sorted = [x[0] for x in selected_sources_scores_sorted][:limit_sources_to_answer]
+
+        with st.spinner(text="In progress..."):
+            answer = get_answer(selected_sources_sorted, query, model)
 
         st.markdown(answer["output_text"])
         st.markdown("#### Sources")
 
         for source, score in selected_sources_scores_sorted:
-            st.text(f"document_name: {source.metadata['document_name']}" \
-                    f"\npage: {source.metadata['page']} / {source.metadata['total_pages']}"  \
-                    f"\nchunk: {source.metadata['chunk']} / {source.metadata['total_chunks']}" \
-                    f"\nssimilarity core: {100*score:.1f} %"
-                    )
+            st.text(
+                f"document_name: {source.metadata['document_name']}"
+                f"\npage: {source.metadata['page']} / {source.metadata['total_pages']}"
+                f"\nchunk: {source.metadata['chunk']} / {source.metadata['total_chunks']}"
+                f"\nsimilarity core: {100*score:.1f} %"
+            )
             st.markdown(source.page_content)
             st.markdown("---")
     else:

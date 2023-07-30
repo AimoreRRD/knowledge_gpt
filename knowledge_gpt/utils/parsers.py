@@ -41,8 +41,6 @@ def parse_txt(file: BytesIO) -> str:
     return text
 
 
-
-
 @st.cache_data()
 def parse_file(file: BytesIO) -> str | List[str]:
     """Parses a file and returns a list of Documents."""

@@ -1,6 +1,5 @@
-import os
-
 import streamlit as st
+from decouple import config
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -23,7 +22,7 @@ def sidebar():
             type="password",
             placeholder="Paste your OpenAI API key here (sk-...)",
             help="You can get your API key from https://platform.openai.com/account/api-keys.",  # noqa: E501
-            value=os.environ.get("OPENAI_API_KEY", None) or st.session_state.get("OPENAI_API_KEY", ""),
+            value=config("OPENAI_API_KEY") or st.session_state.get("OPENAI_API_KEY", ""),
         )
 
         if api_key_input:

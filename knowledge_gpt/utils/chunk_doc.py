@@ -1,4 +1,5 @@
 from typing import List
+
 import streamlit as st
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -26,9 +27,18 @@ def text_to_docs(text: str | List[str], document_name=None) -> List[Document]:
             chunk_overlap=0,
         )
         chunks = text_splitter.split_text(doc.page_content)
-        
+
         for i, chunk in enumerate(chunks):
-            doc = Document(page_content=chunk, metadata={"document_name": document_name, "page": doc.metadata["page"], "chunk": i, "total_pages": len(text), "total_chunks": len(chunks)})
+            doc = Document(
+                page_content=chunk,
+                metadata={
+                    "document_name": document_name,
+                    "page": doc.metadata["page"],
+                    "chunk": i,
+                    "total_pages": len(text),
+                    "total_chunks": len(chunks),
+                },
+            )
             # Add sources a metadata
             doc.metadata["source"] = f"{doc.metadata['document_name']}-{doc.metadata['page']}-{doc.metadata['chunk']}"
             doc_chunks.append(doc)

@@ -28,6 +28,7 @@ accelerate = "^0.21.0"
 sentence-transformers = "^2.2.2"
 instructorembedding = "^1.0.1"
 bitsandbytes = "^0.40.2"
+python-decouple = "^3.8"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -36,6 +37,7 @@ pytest = "^7.2.1"
 ipykernel = "^6.23.3"
 ipywidgets = "^8.0.6"
 jupyter = "^1.0.0"
+pre-commit = "^3.3.3"
 
 
 [tool.poetry.group.lint.dependencies]
