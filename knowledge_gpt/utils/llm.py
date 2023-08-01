@@ -1,11 +1,12 @@
+from typing import Any, Dict, List
 
 import streamlit as st
+from langchain.chains.qa_with_sources import load_qa_with_sources_chain
 from langchain.chat_models import ChatOpenAI
+from langchain.docstore.document import Document
 from langchain.llms import HuggingFacePipeline
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
-from langchain.docstore.document import Document
-from typing import List, Dict, Any
-from langchain.chains.qa_with_sources import load_qa_with_sources_chain
+
 from knowledge_gpt.prompts import STUFF_PROMPT
 
 

@@ -15,17 +15,16 @@ faiss-cpu = "^1.7.3"
 openai = "^0.27.8"
 docx2txt = "^0.8"
 pypdf = "^3.3.0"
-ipykernel = "^6.24.0"
 transformers = "^4.30.2"
 torch = ">=2.0.0, !=2.0.1"
 sentence-transformers = "^2.2.2"
 instructorembedding = "^1.0.1"
 python-decouple = "^3.8"
 fastapi = "^0.100.1"
+python-dotenv = "^0.21.1"
 
 
 [tool.poetry.group.dev.dependencies]
-python-dotenv = "^0.21.1"
 pytest = "^7.2.1"
 ipykernel = "^6.23.3"
 ipywidgets = "^8.0.6"

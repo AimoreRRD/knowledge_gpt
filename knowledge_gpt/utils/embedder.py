@@ -1,3 +1,4 @@
+from hashlib import md5
 from typing import List
 
 import streamlit as st
@@ -6,9 +7,6 @@ from langchain.embeddings import HuggingFaceInstructEmbeddings, OpenAIEmbeddings
 from langchain.vectorstores import VectorStore
 from langchain.vectorstores.faiss import FAISS
 from openai.error import AuthenticationError
-
-from hashlib import md5
-
 
 
 @st.cache_resource
@@ -21,7 +19,7 @@ def load_embedder(model_name):
             )
         else:
             embedder = OpenAIEmbeddings(
-                    openai_api_key=st.session_state.get("OPENAI_API_KEY"),
+                openai_api_key=st.session_state.get("OPENAI_API_KEY"),
             )
     else:
         embedder = HuggingFaceInstructEmbeddings(
@@ -39,9 +37,9 @@ def hash_func(doc: Document) -> str:
     """Hash function for caching Documents"""
     return md5(doc.page_content.encode("utf-8")).hexdigest()
 
+
 @st.cache_data(show_spinner="Indexing document... This may take a while⏳", hash_funcs={Document: hash_func})
 def embed_docs(docs: List[Document], _embedder=None) -> VectorStore:
     """Embeds a list of Documents and returns a FAISS index"""
     index = FAISS.from_documents(docs, _embedder)
     return index
-
