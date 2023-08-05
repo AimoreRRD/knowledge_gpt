@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "frontend"
+version = "0.1.0"
+description = ""
+authors = ["aimore <aimorerrd@hotmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+langchain = "^0.0.252"
+streamlit = "^1.25.0"
+openai = "^0.27.8"
+python-decouple = "^3.8"
+docx2txt = "^0.8"
+pypdf = "^3.14.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -7,8 +7,22 @@ readme = "README.md"
 packages = [{include = "embedder"}]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.10"
+streamlit = "^1.24.0"
+langchain = "^0.0.220"
+faiss-cpu = "^1.7.3"
+openai = "^0.27.8"
+docx2txt = "^0.8"
+pypdf = "^3.3.0"
+transformers = "^4.30.2"
+torch = ">=2.0.0, !=2.0.1"
+sentence-transformers = "^2.2.2"
+instructorembedding = "^1.0.1"
+python-decouple = "^3.8"
 fastapi = "^0.100.1"
+python-dotenv = "^0.21.1"
+uvicorn = "^0.23.2"
+# huggingface = "^0.0.1"
 
 
 [build-system]

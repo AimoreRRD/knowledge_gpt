@@ -31,8 +31,8 @@ services:
       context: ./knowledge_gpt
     ports:
       - "8531:8531"
-    environment:
-      - OPENAI_API_KEY=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
+    env_file:
+      - .env
 
   embedder:
     build:
