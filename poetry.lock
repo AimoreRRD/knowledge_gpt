@@ -670,17 +670,17 @@ files = [
 
 [[package]]
 name = "comm"
-version = "0.1.3"
+version = "0.1.4"
 description = "Jupyter Python Comm implementation, for usage in ipykernel, xeus-python etc."
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "comm-0.1.3-py3-none-any.whl", hash = "sha256:16613c6211e20223f215fc6d3b266a247b6e2641bf4e0a3ad34cb1aff2aa3f37"},
-    {file = "comm-0.1.3.tar.gz", hash = "sha256:a61efa9daffcfbe66fd643ba966f846a624e4e6d6767eda9cf6e993aadaab93e"},
+    {file = "comm-0.1.4-py3-none-any.whl", hash = "sha256:6d52794cba11b36ed9860999cd10fd02d6b2eac177068fdd585e1e2f8a96e67a"},
+    {file = "comm-0.1.4.tar.gz", hash = "sha256:354e40a59c9dd6db50c5cc6b4acc887d82e9603787f83b68c01a80a923984d15"},
 ]
 
 [package.dependencies]
-traitlets = ">=5.3"
+traitlets = ">=4"
 
 [package.extras]
 lint = ["black (>=22.6.0)", "mdformat (>0.7)", "mdformat-gfm (>=0.3.5)", "ruff (>=0.0.156)"]
@@ -1301,17 +1301,17 @@ files = [
 
 [[package]]
 name = "ipywidgets"
-version = "8.0.7"
+version = "8.1.0"
 description = "Jupyter interactive widgets"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "ipywidgets-8.0.7-py3-none-any.whl", hash = "sha256:e0aed0c95a1e55b6a123f64305245578bdc09e52965a34941c2b6a578b8c64a0"},
-    {file = "ipywidgets-8.0.7.tar.gz", hash = "sha256:50ace0a8886e9a0d68b980db82f94c25d55d21ff2340ed36f802dd9365e94acf"},
+    {file = "ipywidgets-8.1.0-py3-none-any.whl", hash = "sha256:6c8396cc7b8c95dfb4e9ab0054f48c002f045e7e5d7ae523f559d64e525a98ab"},
+    {file = "ipywidgets-8.1.0.tar.gz", hash = "sha256:ce97dd90525b3066fd00094690964e7eac14cf9b7745d35565b5eeac20cce687"},
 ]
 
 [package.dependencies]
-ipykernel = ">=4.5.1"
+comm = ">=0.1.3"
 ipython = ">=6.1.0"
 jupyterlab-widgets = ">=3.0.7,<3.1.0"
 traitlets = ">=4.3.1"
@@ -1425,13 +1425,13 @@ files = [
 
 [[package]]
 name = "jsonschema"
-version = "4.18.4"
+version = "4.18.6"
 description = "An implementation of JSON Schema validation for Python"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "jsonschema-4.18.4-py3-none-any.whl", hash = "sha256:971be834317c22daaa9132340a51c01b50910724082c2c1a2ac87eeec153a3fe"},
-    {file = "jsonschema-4.18.4.tar.gz", hash = "sha256:fb3642735399fa958c0d2aad7057901554596c63349f4f6b283c493cf692a25d"},
+    {file = "jsonschema-4.18.6-py3-none-any.whl", hash = "sha256:dc274409c36175aad949c68e5ead0853aaffbe8e88c830ae66bb3c7a1728ad2d"},
+    {file = "jsonschema-4.18.6.tar.gz", hash = "sha256:ce71d2f8c7983ef75a756e568317bf54bc531dc3ad7e66a128eae0d51623d8a3"},
 ]
 
 [package.dependencies]
@@ -1648,13 +1648,13 @@ test = ["coverage", "jupyter-server (>=2.0.0)", "pytest (>=7.0)", "pytest-cov", 
 
 [[package]]
 name = "jupyterlab"
-version = "4.0.3"
+version = "4.0.4"
 description = "JupyterLab computational environment"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "jupyterlab-4.0.3-py3-none-any.whl", hash = "sha256:d369944391b1d15f2d1f3cb965fb67352956279b2ae6f03ce7947a43940a8301"},
-    {file = "jupyterlab-4.0.3.tar.gz", hash = "sha256:e14d1ce46a613028111d0d476a1d7d6b094003b7462bac669f5b478317abcb39"},
+    {file = "jupyterlab-4.0.4-py3-none-any.whl", hash = "sha256:23eef35d22be8f2ad9b873ec41ceb2e8c3b0dc8ae740c0f973e2de09e587530f"},
+    {file = "jupyterlab-4.0.4.tar.gz", hash = "sha256:049449a56d93202ed204e0e86f96f5a3447a08cfc09fb012fd239e178651cb34"},
 ]
 
 [package.dependencies]
@@ -3559,13 +3559,13 @@ files = [
 
 [[package]]
 name = "rich"
-version = "13.5.1"
+version = "13.5.2"
 description = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
 optional = false
 python-versions = ">=3.7.0"
 files = [
-    {file = "rich-13.5.1-py3-none-any.whl", hash = "sha256:b97381b204a206e1be618f5e1215a57174a1a7732490b3bf6668cf41d30bc72d"},
-    {file = "rich-13.5.1.tar.gz", hash = "sha256:881653ee7037803559d8eae98f145e0a4c4b0ec3ff0300d2cc8d479c71fc6819"},
+    {file = "rich-13.5.2-py3-none-any.whl", hash = "sha256:146a90b3b6b47cac4a73c12866a499e9817426423f57c5a66949c086191a8808"},
+    {file = "rich-13.5.2.tar.gz", hash = "sha256:fb9d6c0a0f643c99eed3875b5377a184132ba9be4d61516a55273d3554d75a39"},
 ]
 
 [package.dependencies]

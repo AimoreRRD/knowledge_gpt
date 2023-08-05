@@ -7,7 +7,7 @@ from langchain.docstore.document import Document
 from langchain.llms import HuggingFacePipeline
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
-from knowledge_gpt.prompts import STUFF_PROMPT
+from prompts import STUFF_PROMPT
 
 
 @st.cache_resource

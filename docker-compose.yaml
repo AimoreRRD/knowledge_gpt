@@ -1,0 +1,47 @@
+version: '3.8'
+
+# services:
+#   app:
+#     build:
+#       context: ./
+#       target: app
+#     volumes:
+#       - ./data:/algomo/data
+#       - ./models:/algomo/models
+#     ports:
+#       - 5555:5555
+#     restart: on-failure
+#     environment:
+#       - DOCUMENTSTORE_PARAMS_HOST=elasticsearch
+#       - PIPELINE_YAML_PATH=/opt/pipelines/pipelines.haystack-pipeline.yml
+#       - TOKENIZERS_PARALLELISM=false
+#     depends_on:
+#       llm:
+#         condition: service_healthy
+
+#   llm:
+#     image: "docker.elastic.co/elasticsearch/elasticsearch:7.17.6"
+#     ports:
+#       - 9200:9200
+#     restart: on-failure
+
+services:
+  frontend:
+    build:
+      context: ./knowledge_gpt
+    ports:
+      - "8531:8531"
+    environment:
+      - OPENAI_API_KEY=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
+
+  embedder:
+    build:
+      context: ./embedder
+    ports:
+      - "8532:8532"
+
+  llm:
+    build:
+      context: ./llm
+    ports:
+      - "8533:8533"

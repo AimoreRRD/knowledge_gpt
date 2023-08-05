@@ -3,12 +3,12 @@ from typing import List
 import pandas as pd
 import streamlit as st
 
-from knowledge_gpt.components.sidebar import sidebar
-from knowledge_gpt.utils.chunk_doc import text_to_docs
-from knowledge_gpt.utils.embedder import embed_docs, load_embedder
-from knowledge_gpt.utils.llm import get_answer, load_llm
-from knowledge_gpt.utils.parsers import parse_file
-from knowledge_gpt.utils.UI import is_valid
+from components.sidebar import sidebar
+from utils.chunk_doc import text_to_docs
+from utils.embedder import embed_docs, load_embedder
+from utils.llm import get_answer, load_llm
+from utils.parsers import parse_file
+from utils.UI import is_valid
 
 st.set_page_config(page_title="KnowledgeGPT", page_icon="📖", layout="wide")
 st.header("📖KnowledgeGPT")
