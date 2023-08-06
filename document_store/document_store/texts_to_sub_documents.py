@@ -1,12 +1,12 @@
 from typing import List
 
-import streamlit as st
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.docstore.document import Document
 
 
-@st.cache_data(show_spinner="text_to_docs...⏳")
-def text_to_docs(text: str | List[str], document_name=None) -> List[Document]:
+# @st.cache_data(show_spinner="text_to_docs...⏳")
+def texts_to_sub_documents(text: str | List[str], document_name=None) -> List[Document]:
     chunk_size = 500
     """Converts a string or list of strings to a list of Documents with metadata."""
     if isinstance(text, str):

@@ -1,11 +1,11 @@
 import streamlit as st
 
 
-def is_valid(index, query, documents_selected) -> bool:
+def is_valid(edited_df, query, documents_selected) -> bool:
     # if not st.session_state.get("OPENAI_API_KEY"):
     # st.error("Please configure your OpenAI API key!")
     # return False
-    if len(index) == 0:
+    if len(edited_df) == 0:
         st.error("Please upload a document!")
         return False
     if not query:

@@ -3,11 +3,9 @@ from io import BytesIO
 from typing import List
 
 import docx2txt
-import streamlit as st
 from pypdf import PdfReader
 
 
-@st.cache_data()
 def parse_docx(file: BytesIO) -> str:
     text = docx2txt.process(file)
     # Remove multiple newlines
@@ -15,7 +13,6 @@ def parse_docx(file: BytesIO) -> str:
     return text
 
 
-@st.cache_data()
 def parse_pdf(file: BytesIO) -> List[str]:
     pdf = PdfReader(file)
     output = []
@@ -33,7 +30,6 @@ def parse_pdf(file: BytesIO) -> List[str]:
     return output
 
 
-@st.cache_data()
 def parse_txt(file: BytesIO) -> str:
     text = file.read().decode("utf-8")
     # Remove multiple newlines
@@ -41,7 +37,6 @@ def parse_txt(file: BytesIO) -> str:
     return text
 
 
-@st.cache_data()
 def parse_file(file: BytesIO) -> str | List[str]:
     """Parses a file and returns a list of Documents."""
     if file.name.endswith(".pdf"):
