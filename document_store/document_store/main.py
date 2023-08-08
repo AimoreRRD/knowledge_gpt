@@ -5,11 +5,16 @@ from langchain.embeddings import HuggingFaceInstructEmbeddings
 from langchain.vectorstores.faiss import FAISS
 from langchain.vectorstores import VectorStore
 
-from parses import parse_file
-from texts_to_sub_documents import texts_to_sub_documents
+from document_store.parsers import parse_file
+from document_store.texts_to_sub_documents import texts_to_sub_documents
 from typing import List
 from langchain.docstore.document import Document
 from io import BytesIO
+from typing import Annotated
+
+from fastapi import FastAPI, File, Form, UploadFile
+
+import logging
 
 app = FastAPI()
 indexes = dict()
@@ -32,25 +37,37 @@ async def get_selected_sources_with_scores(query:str, documents_selected:List[st
     return sources_scores_sorted
 
 @app.post(("/load_model/"))
-def load_model(model_name: str="hkunlp/instructor-base"):
+def load_model(model_name: str):
+    print(f"{model_name=}", flush=True)
     global embedder
-    embedder = HuggingFaceInstructEmbeddings(
-        model_name=model_name,
-        embed_instruction="Represent the question or text for retrieval:",
-        query_instruction="Represent the context for retrieving supporting documents for questions:",
-    )
+    if model_name == "OpenAI":
+        embedder = None
+    else:
+        embedder = HuggingFaceInstructEmbeddings(
+            model_name=model_name,
+            embed_instruction="Represent the question or text for retrieval:",
+            query_instruction="Represent the context for retrieving supporting documents for questions:",
+        )
 
 @app.post(("/doc_to_store/"))
-def doc_to_store(document: BytesIO):
-    # ? Parse
-    text = parse_file(document)
-
-    document_name = document.str
-    # ? Chunk + SubDocument
-    sub_documents = texts_to_sub_documents(text, document_name)
-
-    # ? Embed + Store
-    index = FAISS.from_documents(sub_documents, embedder)
-
-    indexes[document_name] = index
+async def doc_to_store(files: List[UploadFile] = File(...)):
+    print(files[0].file)
+    lines = open(files[0].file).readlines()
+    print(files[0].file)
+    # TODO: Save the file locally
+    # document = BytesIO(file_data.file.read())
+    # document_name = file_data.filename
+    # logging.warning(f"\ndocument_name: {document_name}")
+    # logging.warning(f"\ndocument: {type(document)}")
     
+    # # ? Parse 
+    # text = parse_file(document, document_name)
+
+    # # ? Chunk + SubDocument
+    # sub_documents = texts_to_sub_documents(text, document_name)
+    # print(f"{len(sub_documents)=}", flush=True)
+
+    # # ? Embed + Store
+    # index = FAISS.from_documents(sub_documents, embedder)
+
+    # indexes[document_name] = index

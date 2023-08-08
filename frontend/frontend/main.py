@@ -25,7 +25,7 @@ def clear_submit():
 
 
 @st.cache_resource
-def index_doc(uploaded_files):    
+def send_docs_to_store(uploaded_files):    
     dfs = pd.DataFrame([])
     for uploaded_file in uploaded_files:
         print(f"uploaded_file: {uploaded_file}")
@@ -69,7 +69,7 @@ uploaded_files = st.file_uploader(
 )
 
 if len(uploaded_files) > 0:
-    dfs = index_doc(uploaded_files)
+    dfs = send_docs_to_store(uploaded_files)
     edited_df = set_df(dfs)
 
 
