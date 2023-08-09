@@ -13,6 +13,8 @@ from io import BytesIO
 from typing import Annotated
 
 from fastapi import FastAPI, File, Form, UploadFile
+# from streamlit.runtime.uploaded_file_manager import UploadedFile
+
 
 import logging
 
@@ -51,23 +53,20 @@ def load_model(model_name: str):
 
 @app.post(("/doc_to_store/"))
 async def doc_to_store(files: List[UploadFile] = File(...)):
-    print(files[0].file)
-    lines = open(files[0].file).readlines()
-    print(files[0].file)
     # TODO: Save the file locally
-    # document = BytesIO(file_data.file.read())
-    # document_name = file_data.filename
-    # logging.warning(f"\ndocument_name: {document_name}")
-    # logging.warning(f"\ndocument: {type(document)}")
+    document = files[0].file
+    document_name = files[0].filename
+    logging.warning(f"\ndocument_name: {document_name}")
+    logging.warning(f"\ndocument: {type(document)}")
     
-    # # ? Parse 
-    # text = parse_file(document, document_name)
+    # ? Parse 
+    text = parse_file(document, document_name)
 
-    # # ? Chunk + SubDocument
-    # sub_documents = texts_to_sub_documents(text, document_name)
-    # print(f"{len(sub_documents)=}", flush=True)
+    # ? Chunk + SubDocument
+    sub_documents = texts_to_sub_documents(text, document_name)
+    print(f"{len(sub_documents)=}", flush=True)
 
-    # # ? Embed + Store
-    # index = FAISS.from_documents(sub_documents, embedder)
+    # ? Embed + Store
+    index = FAISS.from_documents(sub_documents, embedder)
 
-    # indexes[document_name] = index
+    indexes[document_name] = index

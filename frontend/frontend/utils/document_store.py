@@ -3,6 +3,8 @@ import streamlit as st
 from io import StringIO, BytesIO, BufferedReader
 import httpx
 from streamlit.runtime.uploaded_file_manager import UploadedFile
+# from fastapi import FastAPI, File, Form, UploadFile
+
 
 def load_embedder(model_name:str):
     EMBEDDING_API_URL = f"http://0.0.0.0:8532/load_model/"
@@ -25,14 +27,9 @@ def load_embedder(model_name:str):
 # @st.cache_data(show_spinner="Indexing document... This may take a while⏳", hash_funcs={Document: hash_func})
 def doc_to_store(uploaded_file: UploadedFile):
     DOC_STORE_API_URL = "http://0.0.0.0:8532/doc_to_store/"
-    print(f"{uploaded_file=}")
-    print(f"{type(uploaded_file)=}")
-
-    # with open(uploaded_file, "rb") as f:
-    files = [("files", uploaded_file.read())]
-
-    data = {}
-    response = requests.post(url=DOC_STORE_API_URL, files=files, data=data)
+    files = {'files': (uploaded_file.name, uploaded_file.read(), 'application/pdf')}
+    headers = {'accept': 'application/json'}
+    response = requests.post(url=DOC_STORE_API_URL, files=files, headers=headers)
     if response.status_code == 200:
         return str(response.json())
     return None
