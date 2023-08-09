@@ -2,7 +2,6 @@ from typing import List
 
 import pandas as pd
 import streamlit as st
-
 from components.sidebar import sidebar
 from utils.chunk_doc import text_to_docs
 from utils.embedder import embed_docs, load_embedder

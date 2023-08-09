@@ -1,5 +1,4 @@
 from langchain.docstore.document import Document
-
 from utils.QA import get_sources
 
 

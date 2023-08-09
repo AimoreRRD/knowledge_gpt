@@ -2,7 +2,6 @@ from typing import List
 
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.docstore.document import Document
 
 
 # @st.cache_data(show_spinner="text_to_docs...⏳")

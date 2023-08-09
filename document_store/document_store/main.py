@@ -1,32 +1,29 @@
+import logging
+from typing import List
 
-import json
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile
+from langchain.docstore.document import Document
 from langchain.embeddings import HuggingFaceInstructEmbeddings
+
+# from langchain.vectorstores import VectorStore
 from langchain.vectorstores.faiss import FAISS
-from langchain.vectorstores import VectorStore
 
 from document_store.parsers import parse_file
 from document_store.texts_to_sub_documents import texts_to_sub_documents
-from typing import List
-from langchain.docstore.document import Document
-from io import BytesIO
-from typing import Annotated
-
-from fastapi import FastAPI, File, Form, UploadFile
-# from streamlit.runtime.uploaded_file_manager import UploadedFile
-
-
-import logging
 
 app = FastAPI()
 indexes = dict()
+
 
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
 
+
 @app.get("/get_selected_sources_with_scores/")
-async def get_selected_sources_with_scores(query:str, documents_selected:List[str]=[], k: int = 1) -> List[Document]:
+async def get_selected_sources_with_scores(
+    query: str, documents_selected: List[str] = [], k: int = 1
+) -> List[Document]:
     sources_scores_list = []
     for documnet_name in documents_selected:
         index = indexes.get(documnet_name, dict())
@@ -37,6 +34,7 @@ async def get_selected_sources_with_scores(query:str, documents_selected:List[st
     sources_scores_sorted = sorted(sources_scores_list, key=lambda x: x[1], reverse=True)
 
     return sources_scores_sorted
+
 
 @app.post(("/load_model/"))
 def load_model(model_name: str):
@@ -51,6 +49,7 @@ def load_model(model_name: str):
             query_instruction="Represent the context for retrieving supporting documents for questions:",
         )
 
+
 @app.post(("/doc_to_store/"))
 async def doc_to_store(files: List[UploadFile] = File(...)):
     # TODO: Save the file locally
@@ -58,8 +57,8 @@ async def doc_to_store(files: List[UploadFile] = File(...)):
     document_name = files[0].filename
     logging.warning(f"\ndocument_name: {document_name}")
     logging.warning(f"\ndocument: {type(document)}")
-    
-    # ? Parse 
+
+    # ? Parse
     text = parse_file(document, document_name)
 
     # ? Chunk + SubDocument

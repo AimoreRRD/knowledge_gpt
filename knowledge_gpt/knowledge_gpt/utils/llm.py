@@ -5,9 +5,8 @@ from langchain.chains.qa_with_sources import load_qa_with_sources_chain
 from langchain.chat_models import ChatOpenAI
 from langchain.docstore.document import Document
 from langchain.llms import HuggingFacePipeline
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
-
 from prompts import STUFF_PROMPT
+from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
 
 @st.cache_resource

@@ -10,14 +10,18 @@ st.set_page_config(page_title="KnowledgeGPT", page_icon="📖", layout="wide")
 st.header("📖KnowledgeGPT")
 sidebar()
 
+
 def load_embedder_cb():
     load_embedder(embedder_name)
-    
+
+
 col1, col2, col3 = st.columns([0.3, 0.3, 1.0])
 with col1:
     llm_name = st.selectbox(label="LLM", options=["OpenAI", "distilgpt2"])
 with col2:
-    embedder_name = st.selectbox(label="Embedder", options=["OpenAI", "hkunlp/instructor-base"], index=1, on_change=load_embedder_cb)
+    embedder_name = st.selectbox(
+        label="Embedder", options=["OpenAI", "hkunlp/instructor-base"], index=1, on_change=load_embedder_cb
+    )
 
 
 def clear_submit():
@@ -25,13 +29,12 @@ def clear_submit():
 
 
 @st.cache_resource
-def send_docs_to_store(uploaded_files):    
+def send_docs_to_store(uploaded_files):
     dfs = pd.DataFrame([])
     for uploaded_file in uploaded_files:
         print(f"uploaded_file: {uploaded_file}")
         df = pd.DataFrame({"document": [uploaded_file.name], "include": [False]})
         dfs = pd.concat([df, dfs])
-        # ? doc_to_store(uploaded_file)
         doc_to_store(uploaded_file)
         # text = parse_file(uploaded_file)
         # document_name = uploaded_file.name.split(".")[0]
@@ -107,7 +110,7 @@ if (submit_button or st.session_state.get("submit")) and len(edited_df):
         load_llm(llm_name)
 
         with st.spinner(text="In progress..."):
-            answer, selected_sources_scores_sorted = get_answer(query)
+            answer, selected_sources_scores_sorted = get_answer(query, documents_selected)
 
         st.markdown(answer["output_text"])
         st.markdown("#### Sources")
