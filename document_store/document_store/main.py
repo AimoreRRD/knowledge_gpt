@@ -20,10 +20,11 @@ def read_root():
     return {"Hello": "World"}
 
 
-@app.get("/get_selected_sources_with_scores/")
+@app.post("/get_selected_sources_with_scores/")
 async def get_selected_sources_with_scores(
     query: str, documents_selected: List[str] = [], k: int = 1
 ) -> List[Document]:
+    print("get_selected_sources_with_scores...")
     sources_scores_list = []
     for documnet_name in documents_selected:
         index = indexes.get(documnet_name, dict())
@@ -33,7 +34,7 @@ async def get_selected_sources_with_scores(
 
     sources_scores_sorted = sorted(sources_scores_list, key=lambda x: x[1], reverse=True)
 
-    return sources_scores_sorted
+    return {"sources_scores_sorted": sources_scores_sorted}
 
 
 @app.post(("/load_model/"))

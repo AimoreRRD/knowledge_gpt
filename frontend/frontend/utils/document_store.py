@@ -1,9 +1,9 @@
 import requests
+import streamlit as st
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 
-# from fastapi import FastAPI, File, Form, UploadFile
 
-
+@st.cache_data
 def load_embedder(model_name: str):
     EMBEDDING_API_URL = "http://0.0.0.0:8532/load_model/"
 

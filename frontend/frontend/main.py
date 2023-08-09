@@ -10,18 +10,13 @@ st.set_page_config(page_title="KnowledgeGPT", page_icon="📖", layout="wide")
 st.header("📖KnowledgeGPT")
 sidebar()
 
-
-def load_embedder_cb():
-    load_embedder(embedder_name)
-
-
 col1, col2, col3 = st.columns([0.3, 0.3, 1.0])
 with col1:
-    llm_name = st.selectbox(label="LLM", options=["OpenAI", "distilgpt2"])
+    llm_name = st.selectbox(label="LLM", options=["OpenAI", "distilgpt2"], index=0)
+    load_llm(llm_name, st.session_state.get("OPENAI_API_KEY"))
 with col2:
-    embedder_name = st.selectbox(
-        label="Embedder", options=["OpenAI", "hkunlp/instructor-base"], index=1, on_change=load_embedder_cb
-    )
+    embedder_name = st.selectbox(label="Embedder", options=["OpenAI", "hkunlp/instructor-base"], index=1)
+    load_embedder(embedder_name)
 
 
 def clear_submit():
@@ -33,7 +28,7 @@ def send_docs_to_store(uploaded_files):
     dfs = pd.DataFrame([])
     for uploaded_file in uploaded_files:
         print(f"uploaded_file: {uploaded_file}")
-        df = pd.DataFrame({"document": [uploaded_file.name], "include": [False]})
+        df = pd.DataFrame({"document": [uploaded_file.name], "include": [True]})
         dfs = pd.concat([df, dfs])
         doc_to_store(uploaded_file)
         # text = parse_file(uploaded_file)
@@ -77,7 +72,7 @@ if len(uploaded_files) > 0:
 
 
 st.markdown("#### Query")
-query = st.text_area("Ask a question about the document.", on_change=clear_submit)
+query = st.text_area("Ask a question about the document.", on_change=clear_submit, value="Who was Isaac?")
 
 col1, col2, col3, col4 = st.columns([0.1, 0.12, 0.15, 1.0])
 
@@ -107,9 +102,8 @@ if (submit_button or st.session_state.get("submit")) and len(edited_df):
     documents_selected = list(edited_df[edited_df["include"]]["document"])
 
     if is_valid(edited_df, query, documents_selected):
-        load_llm(llm_name)
-
         with st.spinner(text="In progress..."):
+            print(f"{documents_selected=}")
             answer, selected_sources_scores_sorted = get_answer(query, documents_selected)
 
         st.markdown(answer["output_text"])

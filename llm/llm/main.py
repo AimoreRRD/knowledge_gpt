@@ -1,41 +1,49 @@
+import logging
 from typing import List
 
 import requests
 from fastapi import FastAPI
 from langchain.chains.qa_with_sources import load_qa_with_sources_chain
+from langchain.chat_models import ChatOpenAI
 from langchain.llms import HuggingFacePipeline
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
 app = FastAPI()
 
 
-@app.post(("/load_model/{model_name}"))
-async def load_model(model_name: str):
-    global llm
+@app.post(("/load_model/"))
+async def load_model(model_name: str, openai_api_key: str):
+    if model_name == "OpenAI":
+        llm = ChatOpenAI(temperature=0, openai_api_key=openai_api_key)
+    else:
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        model = AutoModelForCausalLM.from_pretrained(model_name, use_safetensors=False)
+        pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, max_new_tokens=50, device=0)
+        llm = HuggingFacePipeline(pipeline=pipe)
 
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForCausalLM.from_pretrained(model_name, use_safetensors=False)
-    pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, max_new_tokens=50, device=0)
-    llm = HuggingFacePipeline(pipeline=pipe)
-
-
-@app.get("/generate/")
-async def generate_answer(question: str, documents_selected: List[str]):
+    global chain
     chain = load_qa_with_sources_chain(
         llm,
         chain_type="stuff",
         prompt=STUFF_PROMPT,
     )
 
-    DOC_STORE_API_URL = "http://0.0.0.0:8532/get_selected_sources_with_scores/"
-    data = {"query": question, "documents_selected": documents_selected, "k": 1}
 
-    response = requests.get(url=DOC_STORE_API_URL, params=data)
-    print(f"response:{response}")
-    print(response)
+@app.post("/generate/")
+def generate_answer(query: str, documents_selected: list):
+    DOC_STORE_API_URL = "http://0.0.0.0:8532/get_selected_sources_with_scores/"
+    data = {"query": query, "k": 1}
+    params = {"documents_selected": documents_selected}
+    logging.warning(f"\n{data=}")
+    logging.warning(f"\n{params=}")
+    headers = {"accept": "application/json"}
+    response = requests.post(url=DOC_STORE_API_URL, params=params, data=data, headers=headers)
+
+    logging.warning(f"\nresponse:{response}")
+
     docs_resources = response
 
-    answer = chain({"input_documents": docs_resources, "question": question}, return_only_outputs=False)
+    answer = chain({"input_documents": docs_resources, "question": query}, return_only_outputs=False)
 
     return {"answer": answer}
 
