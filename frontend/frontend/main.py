@@ -106,17 +106,21 @@ if (submit_button or st.session_state.get("submit")) and len(edited_df):
             print(f"{documents_selected=}")
             answer, selected_sources_scores_sorted = get_answer(query, documents_selected)
 
-        st.markdown(answer["output_text"])
+        print(f"{answer=}")
+        print(f"{selected_sources_scores_sorted=}")
+
+        st.markdown(answer)
         st.markdown("#### Sources")
 
         for source, score in selected_sources_scores_sorted:
+            print(f"{source=}")
             st.text(
-                f"document_name: {source.metadata['document_name']}"
-                f"\npage: {source.metadata['page']} / {source.metadata['total_pages']}"
-                f"\nchunk: {source.metadata['chunk']} / {source.metadata['total_chunks']}"
+                f"document_name: {source['metadata']['document_name']}"
+                f"\npage: {source['metadata']['page']} / {source['metadata']['total_pages']}"
+                f"\nchunk: {source['metadata']['chunk']} / {source['metadata']['total_chunks']}"
                 f"\nsimilarity core: {100*score:.1f} %"
             )
-            st.markdown(source.page_content)
+            st.markdown(source['page_content'])
             st.markdown("---")
     else:
         st.stop()

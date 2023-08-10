@@ -21,10 +21,14 @@ def read_root():
 
 
 @app.post("/get_selected_sources_with_scores/")
-async def get_selected_sources_with_scores(
-    query: str, documents_selected: List[str] = [], k: int = 1
-) -> List[Document]:
+def get_selected_sources_with_scores(
+    query: str, documents_selected: list, k:int=1
+):
     print("get_selected_sources_with_scores...")
+    print(f"{query=}")
+    print(f"{documents_selected=}")
+    
+    
     sources_scores_list = []
     for documnet_name in documents_selected:
         index = indexes.get(documnet_name, dict())

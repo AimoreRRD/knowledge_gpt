@@ -22,13 +22,16 @@ def load_llm(model_name, openai_api_key):
 def get_answer(query: str, documents_selected: list) -> Dict[str, Any]:
     LLM_API_URL = "http://0.0.0.0:8533/generate/"
 
-    data = {"documents_selected": documents_selected}
     params = {"query": query}
+    data = {"documents_selected": documents_selected}
 
     headers = {"accept": "application/json"}
     print(f"{data=}")
     response = requests.post(url=LLM_API_URL, params=params, data=data, headers=headers)
-
+    # answer = response.json()["answer"]["output_text"]
+    
+    answer = response.json()["answer"]
+    docs_resources = response.json()["docs_resources"]
     if response.status_code == 200:
-        return response.json()["answer"]
+        return answer, docs_resources
     return None

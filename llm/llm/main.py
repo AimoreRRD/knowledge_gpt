@@ -32,20 +32,23 @@ async def load_model(model_name: str, openai_api_key: str):
 @app.post("/generate/")
 def generate_answer(query: str, documents_selected: list):
     DOC_STORE_API_URL = "http://0.0.0.0:8532/get_selected_sources_with_scores/"
-    data = {"query": query, "k": 1}
-    params = {"documents_selected": documents_selected}
+    params = {"query": query}
+    data = {"documents_selected": documents_selected}
     logging.warning(f"\n{data=}")
     logging.warning(f"\n{params=}")
+    
     headers = {"accept": "application/json"}
     response = requests.post(url=DOC_STORE_API_URL, params=params, data=data, headers=headers)
 
-    logging.warning(f"\nresponse:{response}")
+    logging.warning(f"\nresponse.status_code:{response.status_code}")
+    logging.warning(f"\nresponse:{response.json()}")
 
-    docs_resources = response
+    docs_resources = response.json()['sources_scores_sorted']
+    logging.warning(f"\ndocs_resources:{docs_resources}")
 
-    answer = chain({"input_documents": docs_resources, "question": query}, return_only_outputs=False)
-
-    return {"answer": answer}
+    # answer = chain({"input_documents": docs_resources, "question": query}, return_only_outputs=False)
+    answer = "AIMORE"
+    return {"answer": answer, "docs_resources": docs_resources}
 
 
 # flake8: noqa
