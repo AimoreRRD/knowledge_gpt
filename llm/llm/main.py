@@ -1,54 +1,79 @@
+import json
 import logging
-from typing import List
 
 import requests
 from fastapi import FastAPI
 from langchain.chains.qa_with_sources import load_qa_with_sources_chain
 from langchain.chat_models import ChatOpenAI
+from langchain.docstore.document import Document
 from langchain.llms import HuggingFacePipeline
+from pydantic import BaseModel
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+
+
+class GenerateAnswerDataModel(BaseModel):
+    query: str
+    documents_selected: list
+    k: int
+
 
 app = FastAPI()
 
+chain = None
 
-@app.post(("/load_model/"))
-async def load_model(model_name: str, openai_api_key: str):
-    if model_name == "OpenAI":
-        llm = ChatOpenAI(temperature=0, openai_api_key=openai_api_key)
-    else:
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
-        model = AutoModelForCausalLM.from_pretrained(model_name, use_safetensors=False)
-        pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, max_new_tokens=50, device=0)
-        llm = HuggingFacePipeline(pipeline=pipe)
 
+@app.post(("/load_llm/"))
+async def load_llm(model_name: str, openai_api_key: str):
+    logging.warning(f"Loading LLM: {model_name}")
     global chain
-    chain = load_qa_with_sources_chain(
-        llm,
-        chain_type="stuff",
-        prompt=STUFF_PROMPT,
-    )
+    if not chain:
+        if model_name == "OpenAI":
+            llm = ChatOpenAI(temperature=0, openai_api_key=openai_api_key)
+        else:
+            tokenizer = AutoTokenizer.from_pretrained(model_name)
+            model = AutoModelForCausalLM.from_pretrained(model_name, use_safetensors=False)
+            pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, max_new_tokens=50, device=0)
+            llm = HuggingFacePipeline(pipeline=pipe)
+
+        chain = load_qa_with_sources_chain(
+            llm,
+            chain_type="stuff",
+            prompt=STUFF_PROMPT,
+        )
 
 
 @app.post("/generate/")
-def generate_answer(query: str, documents_selected: list):
+def generate_answer(data: GenerateAnswerDataModel):
+    query = data.dict()["query"]
+    documents_selected = data.dict()["documents_selected"]
+    logging.warning(f"Generating answer for query: {query} based on documents_selected: {documents_selected}")
+
     DOC_STORE_API_URL = "http://0.0.0.0:8532/get_selected_sources_with_scores/"
-    params = {"query": query}
-    data = {"documents_selected": documents_selected}
-    logging.warning(f"\n{data=}")
-    logging.warning(f"\n{params=}")
-    
-    headers = {"accept": "application/json"}
-    response = requests.post(url=DOC_STORE_API_URL, params=params, data=data, headers=headers)
 
-    logging.warning(f"\nresponse.status_code:{response.status_code}")
-    logging.warning(f"\nresponse:{response.json()}")
+    response = requests.post(url=DOC_STORE_API_URL, data=json.dumps(data.dict()))
+    # TODO: I need to preserve the object docs in order to access it correctly
+    if response.status_code == 200:
+        logging.warning(f"\nresponse.json:{response.json()}")
+        # for doc_score in response.json():
+        #     doc = Document(doc_score[0])
+        #     score = doc_score[1]
+        # logging.warning(f"\nd:{doc}")
+        sources_scores_sorted = response.json()
+        docs_resources = [
+            Document(page_content=x[0]["page_content"], metadata=x[0]["metadata"]) for x in sources_scores_sorted
+        ]
 
-    docs_resources = response.json()['sources_scores_sorted']
-    logging.warning(f"\ndocs_resources:{docs_resources}")
+        logging.warning(f"docs_resources: {docs_resources}")
 
-    # answer = chain({"input_documents": docs_resources, "question": query}, return_only_outputs=False)
-    answer = "AIMORE"
-    return {"answer": answer, "docs_resources": docs_resources}
+        # response = [[{'page_content': "Sir Isaac Newton FRS Portrait of Newton at 46 by Godfrey Kneller, 1689 Born 4 January 1643 [O.S. 25 December 1642][a] Woolsthorpe-by-Colsterworth, Lincolnshire, England Died 31 March 1727 (aged 84) [O.S. 20 March 1726][a] Kensington, Middlesex, Great Britain Resting placeWestminster Abbey Education Trinity College, Cambridge (M.A., 1668)[15] Known for List Newtonian mechanics universal gravitation calculus Newton's laws of motion optics binomial series PrincipiaIsaac Newton Sir Isaac Newton FRS", 'metadata': {'document_name': 'Isaac_Newton.pdf', 'page': 1, 'chunk': 0, 'total_pages': 35, 'total_chunks': 6, 'source': 'Isaac_Newton.pdf-1-0'}}, 0.769099622964859],]
+
+        answer = chain({"input_documents": docs_resources, "question": query}, return_only_outputs=True)
+        logging.warning(f"answer: {answer}")
+
+        return {"answer": answer["output_text"], "sources_scores_sorted": sources_scores_sorted}
+    else:
+        logging.warning(f"\n{response.status_code=}")
+        logging.warning(f"\n{response.content=}")
 
 
 # flake8: noqa

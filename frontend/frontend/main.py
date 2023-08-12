@@ -31,10 +31,6 @@ def send_docs_to_store(uploaded_files):
         df = pd.DataFrame({"document": [uploaded_file.name], "include": [True]})
         dfs = pd.concat([df, dfs])
         doc_to_store(uploaded_file)
-        # text = parse_file(uploaded_file)
-        # document_name = uploaded_file.name.split(".")[0]
-        # doc_chunks = text_to_docs(text, document_name=document_name)
-        # indexes[uploaded_file.name] = doc_to_store(doc_chunks)
 
     return dfs
 
@@ -43,18 +39,6 @@ def set_df(dfs):
     edited_df = st.data_editor(dfs, hide_index=True)
     return edited_df
 
-
-# def get_selected_sources_with_scores(query="", documents_selected=[], k: int = 1) -> List:
-#     sources_scores_list = []
-#     for doc in documents_selected:
-#         index = indexes.get(doc, dict())
-#         sources_scores = index.similarity_search_with_score(query, k=k)
-#         sources_scores = [(sources_score[0], 1 - sources_score[1]) for sources_score in sources_scores]
-#         sources_scores_list.extend(sources_scores)
-
-#     sources_scores_sorted = sorted(sources_scores_list, key=lambda x: x[1], reverse=True)
-
-#     return sources_scores_sorted
 
 edited_df = pd.DataFrame([], columns=["document"])
 
@@ -78,15 +62,15 @@ col1, col2, col3, col4 = st.columns([0.1, 0.12, 0.15, 1.0])
 
 with col1:
     submit_button = st.button("Submit")
-# with col2:
-#     limit_sources_to_answer = st.number_input(
-#         label="Answer sources",
-#         min_value=1,
-#         max_value=10,
-#         value=3,
-#         step=1,
-#         help="Number of sources (passages) that the Language model will have available to answer the question.",
-#     )
+with col2:
+    limit_sources_to_answer = st.number_input(
+        label="Answer sources",
+        min_value=1,
+        max_value=10,
+        value=3,
+        step=1,
+        help="Number of sources (passages) that the Language model will have available to answer the question.",
+    )
 # with col3:
 #     limit_sources_to_search = st.number_input(
 #         label="Document sources",
@@ -104,12 +88,12 @@ if (submit_button or st.session_state.get("submit")) and len(edited_df):
     if is_valid(edited_df, query, documents_selected):
         with st.spinner(text="In progress..."):
             print(f"{documents_selected=}")
-            answer, selected_sources_scores_sorted = get_answer(query, documents_selected)
+            answer, selected_sources_scores_sorted = get_answer(query, documents_selected, limit_sources_to_answer)
 
         print(f"{answer=}")
         print(f"{selected_sources_scores_sorted=}")
 
-        st.markdown(answer)
+        st.markdown(f"{llm_name} - {answer}")
         st.markdown("#### Sources")
 
         for source, score in selected_sources_scores_sorted:
@@ -120,7 +104,7 @@ if (submit_button or st.session_state.get("submit")) and len(edited_df):
                 f"\nchunk: {source['metadata']['chunk']} / {source['metadata']['total_chunks']}"
                 f"\nsimilarity core: {100*score:.1f} %"
             )
-            st.markdown(source['page_content'])
+            st.markdown(source["page_content"])
             st.markdown("---")
     else:
         st.stop()
