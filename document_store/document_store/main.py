@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import List
 
@@ -20,7 +21,6 @@ class GenerateAnswerDataModel(BaseModel):
 
 app = FastAPI()
 indexes = dict()
-
 
 embedder = None
 
@@ -47,6 +47,34 @@ def load_embedder(model_name: str):
         logging.warning(f"Embedder already loaded: {model_name}")
 
 
+@app.post(("/doc_to_store/"))
+async def doc_to_store(files: List[UploadFile] = File(...)):
+    # TODO: Save the file locally
+    document = files[0].file
+    document_name = files[0].filename
+    logging.warning(f"Adding document ({document_name}) to store.")
+
+    # ? Parse
+    logging.warning("Parsing.")
+    text = parse_file(document, document_name)
+
+    # ? Chunk + SubDocument
+    logging.warning("Chunking and subdocumenting.")
+    sub_documents, total_pages, total_chunks = texts_to_sub_documents(text, document_name)
+    logging.warning(f"{len(sub_documents)=}")
+
+    # ? Embed + Store
+    logging.warning("Embedding all subdocuments and storing.")
+    index = FAISS.from_documents(sub_documents, embedder)
+    global indexes
+    indexes[document_name] = index
+    logging.warning(f"{indexes.keys()=}")
+
+    document_metadata = dict(total_pages=total_pages, total_chunks=total_chunks)
+    logging.warning(f"{document_metadata=}")
+    return json.dumps(document_metadata)
+
+
 @app.post("/get_selected_sources_with_scores/")
 def get_selected_sources_with_scores(data: GenerateAnswerDataModel):
     data = data.dict()
@@ -69,26 +97,3 @@ def get_selected_sources_with_scores(data: GenerateAnswerDataModel):
     from fastapi.encoders import jsonable_encoder
 
     return [(jsonable_encoder(x[0]), x[1]) for x in sources_scores_sorted]
-
-
-@app.post(("/doc_to_store/"))
-async def doc_to_store(files: List[UploadFile] = File(...)):
-    # TODO: Save the file locally
-    document = files[0].file
-    document_name = files[0].filename
-    logging.warning(f"Adding document ({document_name}) to store.")
-
-    # ? Parse
-    logging.warning("Parsing.")
-    text = parse_file(document, document_name)
-
-    # ? Chunk + SubDocument
-    logging.warning("Chunking and subdocumenting.")
-    sub_documents = texts_to_sub_documents(text, document_name)
-    print(f"{len(sub_documents)=}", flush=True)
-
-    # ? Embed + Store
-    logging.warning("Embedding all subdocuments and storing.")
-    index = FAISS.from_documents(sub_documents, embedder)
-    global indexes
-    indexes[document_name] = index

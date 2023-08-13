@@ -1,3 +1,5 @@
+import json
+
 import requests
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 
@@ -5,11 +7,11 @@ from streamlit.runtime.uploaded_file_manager import UploadedFile
 def load_embedder(model_name: str):
     EMBEDDING_API_URL = "http://0.0.0.0:8532/load_embedder/"
     params = {"model_name": model_name}
-    response = requests.post(url=EMBEDDING_API_URL, params=params)
+    requests.post(url=EMBEDDING_API_URL, params=params)
 
-    if response.status_code == 200:
-        return str(response.json())
-    return None
+    # if response.status_code == 200:
+    #     return str(response.json())
+    # return None
 
 
 # def hash_func(doc: Document) -> str:
@@ -23,6 +25,9 @@ def doc_to_store(uploaded_file: UploadedFile):
     files = {"files": (uploaded_file.name, uploaded_file.read(), "application/pdf")}
     headers = {"accept": "application/json"}
     response = requests.post(url=DOC_STORE_API_URL, files=files, headers=headers)
+
     if response.status_code == 200:
-        return str(response.json())
+        document_metadata = json.loads(response.json())
+        print(f"{document_metadata=}")
+        return document_metadata
     return None

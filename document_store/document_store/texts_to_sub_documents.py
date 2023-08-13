@@ -11,6 +11,7 @@ def texts_to_sub_documents(text: str | List[str], document_name=None) -> List[Do
     if isinstance(text, str):
         # Take a single string as one page
         text = [text]
+    total_pages = len(text)
     page_docs = [Document(page_content=page) for page in text]
 
     # Add page numbers as metadata
@@ -41,4 +42,5 @@ def texts_to_sub_documents(text: str | List[str], document_name=None) -> List[Do
             # Add sources a metadata
             doc.metadata["source"] = f"{doc.metadata['document_name']}-{doc.metadata['page']}-{doc.metadata['chunk']}"
             doc_chunks.append(doc)
-    return doc_chunks
+    total_chunks = len(doc_chunks)
+    return doc_chunks, total_pages, total_chunks

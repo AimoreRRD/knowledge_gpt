@@ -4,10 +4,10 @@ import logging
 import requests
 
 
-def load_llm(model_name, openai_api_key):
+def load_llm(model_name, openai_api_key, device):
     LLM_API_URL = "http://0.0.0.0:8533/load_llm/"
 
-    data = {"model_name": model_name, "openai_api_key": openai_api_key}
+    data = {"model_name": model_name, "openai_api_key": openai_api_key, "device": device}
     headers = {"accept": "application/json"}
 
     response = requests.post(url=LLM_API_URL, params=data, headers=headers)
@@ -35,3 +35,4 @@ def get_answer(query: str, documents_selected: list, k: int):
     else:
         logging.warning(response.status_code)
         logging.warning(response.content)
+        return None, None

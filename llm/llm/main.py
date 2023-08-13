@@ -23,7 +23,7 @@ chain = None
 
 
 @app.post(("/load_llm/"))
-async def load_llm(model_name: str, openai_api_key: str):
+async def load_llm(model_name, openai_api_key, device):
     logging.warning(f"Loading LLM: {model_name}")
     global chain
     if not chain:
@@ -32,7 +32,7 @@ async def load_llm(model_name: str, openai_api_key: str):
         else:
             tokenizer = AutoTokenizer.from_pretrained(model_name)
             model = AutoModelForCausalLM.from_pretrained(model_name, use_safetensors=False)
-            pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, max_new_tokens=50, device=0)
+            pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, max_new_tokens=50, device=device)
             llm = HuggingFacePipeline(pipeline=pipe)
 
         chain = load_qa_with_sources_chain(
@@ -51,19 +51,14 @@ def generate_answer(data: GenerateAnswerDataModel):
     DOC_STORE_API_URL = "http://0.0.0.0:8532/get_selected_sources_with_scores/"
 
     response = requests.post(url=DOC_STORE_API_URL, data=json.dumps(data.dict()))
-    # TODO: I need to preserve the object docs in order to access it correctly
+
     if response.status_code == 200:
-        logging.warning(f"\nresponse.json:{response.json()}")
-        # for doc_score in response.json():
-        #     doc = Document(doc_score[0])
-        #     score = doc_score[1]
-        # logging.warning(f"\nd:{doc}")
         sources_scores_sorted = response.json()
         docs_resources = [
             Document(page_content=x[0]["page_content"], metadata=x[0]["metadata"]) for x in sources_scores_sorted
         ]
 
-        logging.warning(f"docs_resources: {docs_resources}")
+        # logging.warning(f"docs_resources: {docs_resources}")
 
         # response = [[{'page_content': "Sir Isaac Newton FRS Portrait of Newton at 46 by Godfrey Kneller, 1689 Born 4 January 1643 [O.S. 25 December 1642][a] Woolsthorpe-by-Colsterworth, Lincolnshire, England Died 31 March 1727 (aged 84) [O.S. 20 March 1726][a] Kensington, Middlesex, Great Britain Resting placeWestminster Abbey Education Trinity College, Cambridge (M.A., 1668)[15] Known for List Newtonian mechanics universal gravitation calculus Newton's laws of motion optics binomial series PrincipiaIsaac Newton Sir Isaac Newton FRS", 'metadata': {'document_name': 'Isaac_Newton.pdf', 'page': 1, 'chunk': 0, 'total_pages': 35, 'total_chunks': 6, 'source': 'Isaac_Newton.pdf-1-0'}}, 0.769099622964859],]
 
@@ -106,4 +101,14 @@ QUESTION: {question}
 =========
 FINAL ANSWER:"""
 
+# template = """
+# You are an AI that helps me to answer questions.
+# Answer the QUESTION based on your knowledge and use the CONTEXT as a reference of extra knowledge:\n
+# CONTEXT:\n
+# {summaries}
+# \n
+# QUESTION:\n
+# {question}
+# """
+logging.warning(f"template: {len(template)}")
 STUFF_PROMPT = PromptTemplate(template=template, input_variables=["summaries", "question"])
