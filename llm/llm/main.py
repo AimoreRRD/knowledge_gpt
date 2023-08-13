@@ -20,13 +20,17 @@ class GenerateAnswerDataModel(BaseModel):
 app = FastAPI()
 
 chain = None
+current_model_name = None
 
 
 @app.post(("/load_llm/"))
 async def load_llm(model_name, openai_api_key, device):
-    logging.warning(f"Loading LLM: {model_name}")
-    global chain
-    if not chain:
+    global current_model_name
+
+    if model_name != current_model_name:
+        logging.warning(f"Loading LLM: {model_name}")
+        global chain
+        current_model_name = model_name
         if model_name == "OpenAI":
             llm = ChatOpenAI(temperature=0, openai_api_key=openai_api_key)
         else:
@@ -40,6 +44,8 @@ async def load_llm(model_name, openai_api_key, device):
             chain_type="stuff",
             prompt=STUFF_PROMPT,
         )
+        logging.warning(f"chain {chain=} ")
+        logging.warning(f"llm: {llm=}")
 
 
 @app.post("/generate/")
@@ -58,9 +64,9 @@ def generate_answer(data: GenerateAnswerDataModel):
             Document(page_content=x[0]["page_content"], metadata=x[0]["metadata"]) for x in sources_scores_sorted
         ]
 
-        # logging.warning(f"docs_resources: {docs_resources}")
-
         # response = [[{'page_content': "Sir Isaac Newton FRS Portrait of Newton at 46 by Godfrey Kneller, 1689 Born 4 January 1643 [O.S. 25 December 1642][a] Woolsthorpe-by-Colsterworth, Lincolnshire, England Died 31 March 1727 (aged 84) [O.S. 20 March 1726][a] Kensington, Middlesex, Great Britain Resting placeWestminster Abbey Education Trinity College, Cambridge (M.A., 1668)[15] Known for List Newtonian mechanics universal gravitation calculus Newton's laws of motion optics binomial series PrincipiaIsaac Newton Sir Isaac Newton FRS", 'metadata': {'document_name': 'Isaac_Newton.pdf', 'page': 1, 'chunk': 0, 'total_pages': 35, 'total_chunks': 6, 'source': 'Isaac_Newton.pdf-1-0'}}, 0.769099622964859],]
+
+        # TODO: Cap the lenght of the docs resources + Context Stuff to the maximum capacity of the model
 
         answer = chain({"input_documents": docs_resources, "question": query}, return_only_outputs=True)
         logging.warning(f"answer: {answer}")
@@ -101,14 +107,14 @@ QUESTION: {question}
 =========
 FINAL ANSWER:"""
 
-# template = """
-# You are an AI that helps me to answer questions.
-# Answer the QUESTION based on your knowledge and use the CONTEXT as a reference of extra knowledge:\n
-# CONTEXT:\n
-# {summaries}
-# \n
-# QUESTION:\n
-# {question}
-# """
+template = """
+You are an AI that helps me to answer questions.
+Answer the QUESTION based on your knowledge and use the CONTEXT as a reference of extra knowledge:\n
+CONTEXT:\n
+{summaries}
+\n
+QUESTION:\n
+{question}
+"""
 logging.warning(f"template: {len(template)}")
 STUFF_PROMPT = PromptTemplate(template=template, input_variables=["summaries", "question"])

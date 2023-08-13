@@ -23,6 +23,7 @@ app = FastAPI()
 indexes = dict()
 
 embedder = None
+current_embedder_name = None
 
 
 @app.get("/")
@@ -31,10 +32,12 @@ def read_root():
 
 
 @app.post(("/load_embedder/"))
-def load_embedder(model_name: str):
-    global embedder
-    if not embedder:
+async def load_embedder(model_name: str):
+    global current_embedder
+
+    if model_name != current_embedder_name:
         logging.warning(f"Loading embedder: {model_name}")
+        global embedder
         if model_name == "OpenAI":
             embedder = None
         else:
