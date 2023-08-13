@@ -6,8 +6,8 @@ from frontend.utils.document_store import doc_to_store, load_embedder
 from frontend.utils.llm import get_answer, load_llm
 from frontend.utils.UI import is_valid
 
-st.set_page_config(page_title="KnowledgeGPT", page_icon="📖", layout="wide")
-st.header("📖KnowledgeGPT")
+st.set_page_config(page_title="Resolution AI", page_icon="⚖️", layout="wide")
+st.header("⚖️Resolution AI")
 sidebar()
 
 col1, col2, col3, col4 = st.columns([0.3, 0.3, 0.8, 1.0])
@@ -20,52 +20,46 @@ with col2:
     load_embedder(embedder_name)
 
 
+@st.cache_resource
+def send_docs_to_store(uploaded_file):
+    print(f"uploaded_file: {uploaded_file}")
+    document_metadata = doc_to_store(uploaded_file)
+    total_chunks = document_metadata["total_chunks"]
+    total_pages = document_metadata["total_pages"]
+    df = pd.DataFrame(
+        {
+            "include": [True],
+            "document": [uploaded_file.name],
+            "total_pages": [total_pages],
+            "total_chunks": [total_chunks],
+        }
+    )
+
+    st.session_state["df"] = pd.concat([df, st.session_state["df"]])
+
+
 def clear_submit():
     st.session_state["submit"] = False
-
-
-@st.cache_resource
-def send_docs_to_store(uploaded_files):
-    dfs = pd.DataFrame([])
-    for uploaded_file in uploaded_files:
-        print(f"uploaded_file: {uploaded_file}")
-        document_metadata = doc_to_store(uploaded_file)
-        total_chunks = document_metadata["total_chunks"]
-        total_pages = document_metadata["total_pages"]
-        df = pd.DataFrame(
-            {
-                "include": [True],
-                "document": [uploaded_file.name],
-                "total_pages": [total_pages],
-                "total_chunks": [total_chunks],
-            }
-        )
-        dfs = pd.concat([df, dfs])
-
-    return dfs
-
-
-def set_df(dfs):
-    edited_df = st.data_editor(dfs, hide_index=True)
-    return edited_df
+    # df = st.data_editor(st.session_state["df"])
 
 
 with col4:
     uploaded_files = st.file_uploader(
-        "Upload a pdf, docx, or txt file",
+        label="Upload a pdf, docx, or txt file",
+        key="file_uploader",
         type=["pdf", "docx", "txt"],
         help="Scanned documents are not supported yet!",
         on_change=clear_submit,
         accept_multiple_files=True,
     )
+    for uploaded_file in uploaded_files:
+        send_docs_to_store(uploaded_file)
 
 
 with col3:
-    edited_df = pd.DataFrame(columns=["include", "document", "total_pages", "total_chunks"])
-
-    if len(uploaded_files) > 0:
-        dfs = send_docs_to_store(uploaded_files)
-        edited_df = set_df(dfs)
+    if "df" not in st.session_state:
+        st.session_state["df"] = pd.DataFrame(columns=["include", "document", "total_pages", "total_chunks"])
+    table = st.data_editor(st.session_state["df"], hide_index=True)
 
 
 st.markdown("#### Query")
@@ -86,11 +80,11 @@ with col2:
     )
 
 st.markdown("#### Answer")
-if len(edited_df):
+if len(table):
     if submit_button or st.session_state.get("submit"):
-        documents_selected = list(edited_df[edited_df["include"]]["document"])
+        documents_selected = list(table[table["include"]]["document"])
 
-        if is_valid(edited_df, query, documents_selected):
+        if is_valid(table, query, documents_selected):
             with st.spinner(text="In progress..."):
                 print(f"{documents_selected=}")
                 answer, selected_sources_scores_sorted = get_answer(query, documents_selected, limit_sources_to_answer)
